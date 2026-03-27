@@ -4,28 +4,29 @@ on:
     paths:
       - 'request.txt'
 
+permissions:
+  contents: write
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Executar request da VM
         run: |
           if [ ! -f request.txt ]; then exit 0; fi
-          
           METHOD=$(sed -n '1p' request.txt)
           URL=$(sed -n '2p' request.txt)
-          
           echo "Executando: $METHOD $URL"
-          
           if [ "$METHOD" = "GET" ]; then
             curl -s -L --max-time 10 -A "VM-Relay/1.0" "$URL" > response.txt 2>&1
           elif [ "$METHOD" = "POST" ]; then
             BODY=$(sed -n '3p' request.txt)
             curl -s -L --max-time 10 -X POST -d "$BODY" "$URL" > response.txt 2>&1
           fi
-          
           echo "---STATUS---" >> response.txt
           echo "Fetched at: $(date)" >> response.txt
 
